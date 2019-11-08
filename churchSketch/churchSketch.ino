@@ -24,6 +24,7 @@ void setup() {
   pinMode(pirInputPin, INPUT);
   initializing();
   Serial.begin(9600);
+  Serial.println("SETUP");
 }
 
 void loop() {
