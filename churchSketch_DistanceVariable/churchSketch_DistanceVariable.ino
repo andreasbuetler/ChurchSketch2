@@ -21,9 +21,9 @@
 #define poti2InputPin   35
 #define endStopPin      25
 
-const int maxMotorDistance = 500000;
-const int minMotorDistance = 200000;
-const int motorTime = 20;
+const long maxMotorDistance = 700000;
+const long minMotorDistance = 200000;
+const int motorTime = 40;
 const int waitingTime = 3;
 
 int motorSpeed = 2000;
@@ -72,7 +72,7 @@ void endStopper() {
 }
 
 void setDistance() {
-  motorDistance = map(analogRead(poti1InputPin), 0, 4095, minMotorDistance, maxMotorDistance);
+  motorDistance = map(analogRead(poti1InputPin), 1, 4094, minMotorDistance, maxMotorDistance);
 }
 //void setMotorSpeed() {
 //  motorSpeed = map(analogRead(poti1InputPin), 0, 4095, 0, 255);
@@ -80,7 +80,7 @@ void setDistance() {
 
 void initializing() {
   //Serial.println("initializing....");
-  driveMotor(1, 3, 255);
+  driveMotor(1, 1, 255);
   //driveMotor(0,3,200);
   stopMotor();
   while (endStop == false) {
@@ -124,7 +124,7 @@ void BalloonRiseAndFall() {
   motorDirection = 1;
   setDistance();
   motorSpeed = calculateSpeed(motorTime, motorDistance);
-  //Serial.println("MotorSpeed: "+motorSpeed);
+  Serial.println(motorSpeed);
   driveMotor(1, motorTime, motorSpeed);
   stopMotor();
   delay(waitingTime * 1000);
@@ -133,7 +133,7 @@ void BalloonRiseAndFall() {
   }
   Serial.println("START TO FALL");
   motorDirection = !motorDirection;
-  driveMotor(0, motorTime*1.1, motorSpeed);
+  driveMotor(0, motorTime*1.2, motorSpeed);
   stopMotor();
   //Serial.println("BACK TO BOTTOM");
   motorDirection = !motorDirection;
@@ -150,7 +150,7 @@ boolean pirRead(int PinToRead) {
 int calculateSpeed(int duration, int distance) {
   int calculatedSpeed = distance / duration;
   Serial.println("Speed: "+calculatedSpeed);
-  return map(calculatedSpeed, 0, maxMotorDistance / duration, 0, 255);
+  return map(calculatedSpeed, minMotorDistance / duration, maxMotorDistance / duration, 150, 254);
 }
 
 void stopMotor() {
