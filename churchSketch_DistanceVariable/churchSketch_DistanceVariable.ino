@@ -21,8 +21,9 @@
 #define poti2InputPin   35
 #define endStopPin      25
 
-const int maxMotorDistance = 5000;
-const int motorTime = 10;
+const int maxMotorDistance = 500000;
+const int minMotorDistance = 200000;
+const int motorTime = 20;
 const int waitingTime = 3;
 
 int motorSpeed = 2000;
@@ -38,7 +39,7 @@ void setup() {
   pinMode(pirInputPin, INPUT);
   Serial.begin(9600);
   initializing();
-  Serial.println("SETUP!");
+  //Serial.println("SETUP!");
 }
 
 void loop() {
@@ -47,7 +48,7 @@ void loop() {
 
   movement = pirRead(pirInputPin);
   if (movement) {
-    Serial.println("MOVEMENT!");
+    //Serial.println("MOVEMENT!");
     motorDirection = true;
     BalloonRiseAndFall();
     delay(waitingTime * 1000);
@@ -63,67 +64,78 @@ void endStopper() {
   }
   if (digitalRead(endStopPin) == HIGH) {
     endStop = true;
-    Serial.println("ENDSTOP");
+    //Serial.println("ENDSTOP");
+    stopMotor();
+    setStartPosition();
+    
   }
 }
 
 void setDistance() {
-  motorDistance = map(analogRead(poti1InputPin), 0, 4095, 0, maxMotorDistance);
+  motorDistance = map(analogRead(poti1InputPin), 0, 4095, minMotorDistance, maxMotorDistance);
 }
 //void setMotorSpeed() {
 //  motorSpeed = map(analogRead(poti1InputPin), 0, 4095, 0, 255);
 //}
 
 void initializing() {
-  Serial.println("initializing....");
-  driveMotor(1, 3, 200);
+  //Serial.println("initializing....");
+  driveMotor(1, 3, 255);
   //driveMotor(0,3,200);
   stopMotor();
   while (endStop == false) {
-    driveMotor(0, 1, 200);
+    driveMotor(0, 1, 255);
   }
 }
 
 void driveMotor(boolean dir, int duration, int tempo) {
-  Serial.println("DRIVE");
+  //Serial.println("DRIVE");
   duration = duration * 1000;
-  if (dir == true) {
+  if (dir == 1) {
     for (int i = 0; i <= duration; i++) {
       endStopper();
-      if (endStop == true) {
+            analogWrite(motorPinR, 0);
+      analogWrite(motorPinL, tempo);
+      if (endStop == true) {  
+        //setStartPosition();
         i = duration;
       }
 
-      analogWrite(motorPinR, 0);
-      analogWrite(motorPinL, tempo);
       delay(1);
     }
-  } else if (dir == false) {
+  }
+  if (dir == 0) {
     for (int k = 0; k <= duration; k++) {
       endStopper();
-      if (endStop == true) {
-        k = duration;
-      }
       analogWrite(motorPinL, 0);
       analogWrite(motorPinR, tempo);
+      if (endStop == true) {       
+        //setStartPosition();
+        k = duration;
+      }
+     
       delay(1);
     }
   }
 }
 
 void BalloonRiseAndFall() {
-  Serial.println("START TO RISE");
+  //Serial.println("START TO RISE");
+  motorDirection = 1;
   setDistance();
   motorSpeed = calculateSpeed(motorTime, motorDistance);
-  Serial.println(motorSpeed);
-  driveMotor(motorDirection, motorTime, motorSpeed);
+  //Serial.println("MotorSpeed: "+motorSpeed);
+  driveMotor(1, motorTime, motorSpeed);
   stopMotor();
   delay(waitingTime * 1000);
+  while(pirRead(pirInputPin)){
+    delay(waitingTime*1000);
+  }
   Serial.println("START TO FALL");
   motorDirection = !motorDirection;
-  driveMotor(motorDirection, motorTime, motorSpeed);
+  driveMotor(0, motorTime*1.1, motorSpeed);
   stopMotor();
-  Serial.println("BACK TO BOTTOM");
+  //Serial.println("BACK TO BOTTOM");
   motorDirection = !motorDirection;
 }
 
@@ -137,17 +149,31 @@ boolean pirRead(int PinToRead) {
 
 int calculateSpeed(int duration, int distance) {
   int calculatedSpeed = distance / duration;
-  Serial.println(calculatedSpeed);
+  Serial.println("Speed: "+calculatedSpeed);
   return map(calculatedSpeed, 0, maxMotorDistance / duration, 0, 255);
 }
 
 void stopMotor() {
-  driveMotor(motorDirection, 0, 0);
+  //driveMotor(0, 0, 0);
+  analogWrite(motorPinR, 0);
+  analogWrite(motorPinL, 0);
 }
 
 void setStartPosition() {
   if (endStop) {
-    driveMotor(1, 1, 200);
+    //Serial.println("correction");
+    
+    for (int e=0;e<=100;e++){     
+      analogWrite(motorPinR, 0);
+      analogWrite(motorPinL, 200);
+    }
+      analogWrite(motorPinR, 0);
+      analogWrite(motorPinL, 0);
+    //delay(500);
+    //endStop = false;
+    //loop();
+    
+    //driveMotor(1, 5, 200);
   }
 }
 
