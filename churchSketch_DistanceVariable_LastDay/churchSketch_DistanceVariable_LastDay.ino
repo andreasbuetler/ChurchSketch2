@@ -1,13 +1,3 @@
-/* Things to implement/problems:
-    - endStopper: Tempo, Stops when Endstopper == true
-    - reading pir when on the Top >> if movmement add delay
-    - set position after endStop() == true
-    - set final variables
-*/
-
-
-
-
 
 #include <dummy.h>
 
@@ -21,8 +11,8 @@
 #define poti2InputPin   35
 #define endStopPin      25
 
-const long maxMotorDistance = 700000;
-const long minMotorDistance = 200000;
+const long maxMotorDistance = 700;
+const long minMotorDistance = 200;
 const int motorTime = 40;
 const int waitingTime = 3;
 
@@ -39,7 +29,6 @@ void setup() {
   pinMode(pirInputPin, INPUT);
   Serial.begin(9600);
   initializing();
-  //Serial.println("SETUP!");
 }
 
 void loop() {
@@ -72,6 +61,7 @@ void endStopper() {
 }
 
 void setDistance() {
+  //motorDistance = map(analogRead(poti1InputPin), 1, 4094, minMotorDistance, maxMotorDistance);
   motorDistance = map(analogRead(poti1InputPin), 1, 4094, minMotorDistance, maxMotorDistance);
 }
 //void setMotorSpeed() {
@@ -165,7 +155,7 @@ void setStartPosition() {
     
     for (int e=0;e<=100;e++){     
       analogWrite(motorPinR, 0);
-      analogWrite(motorPinL, 200);
+      analogWrite(motorPinL, 255);
     }
       analogWrite(motorPinR, 0);
       analogWrite(motorPinL, 0);

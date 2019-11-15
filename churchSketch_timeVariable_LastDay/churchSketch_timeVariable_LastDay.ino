@@ -1,13 +1,3 @@
-/* Things to implement/problems:
-    - endStopper: Tempo, Stops when Endstopper == true
-    - reading pir when on the Top >> if movmement add delay
-    - set position after endStop() == true
-    - set final variables
-*/
-
-
-
-
 
 #include <dummy.h>
 
@@ -21,11 +11,13 @@
 #define poti2InputPin   35
 #define endStopPin      25
 
-const long maxMotorDistance = 700000;
-const long minMotorDistance = 200000;
-const int motorTime = 40;
-const int waitingTime = 3;
+const long maxMotorDistance = 700;
+const long minMotorDistance = 200;
+const int maxMotorTime = 72;
+const int minMotorTime = 13;
+const int waitingTime = 60;
 
+int motorTime;
 int motorSpeed = 2000;
 long motorDistance  = 1000;
 boolean motorDirection = true;
@@ -39,10 +31,10 @@ void setup() {
   pinMode(pirInputPin, INPUT);
   Serial.begin(9600);
   initializing();
-  //Serial.println("SETUP!");
 }
 
 void loop() {
+  //endStop = false;
   endStopper();
   //Serial.println(endStop);
 
@@ -51,32 +43,31 @@ void loop() {
     //Serial.println("MOVEMENT!");
     motorDirection = true;
     BalloonRiseAndFall();
-    delay(waitingTime * 1000);
+    
 
   }
 }
 
 
 void endStopper() {
-  endStop = false;
-  if (digitalRead(endStopPin) == LOW) {
-    endStop = false;
-  }
+  //endStop = false;
   if (digitalRead(endStopPin) == HIGH) {
     endStop = true;
     //Serial.println("ENDSTOP");
     stopMotor();
-    setStartPosition();
-    
+    setStartPosition();    
+  }else if (digitalRead(endStopPin) == LOW) {
+    endStop = false;
   }
 }
 
 void setDistance() {
-  motorDistance = map(analogRead(poti1InputPin), 1, 4094, minMotorDistance, maxMotorDistance);
+  //motorDistance = map(analogRead(poti1InputPin), 1, 4094, minMotorDistance, maxMotorDistance);
+  motorDistance = map(analogRead(poti1InputPin), 0, 4094, minMotorDistance, maxMotorDistance);
 }
-//void setMotorSpeed() {
-//  motorSpeed = map(analogRead(poti1InputPin), 0, 4095, 0, 255);
-//}
+void setMotorTime() {
+  motorTime = map(analogRead(poti1InputPin), 0, 4095, minMotorTime, maxMotorTime);
+}
 
 void initializing() {
   //Serial.println("initializing....");
@@ -94,12 +85,12 @@ void driveMotor(boolean dir, int duration, int tempo) {
   if (dir == 1) {
     for (int i = 0; i <= duration; i++) {
       endStopper();
-            analogWrite(motorPinR, 0);
-      analogWrite(motorPinL, tempo);
       if (endStop == true) {  
         //setStartPosition();
         i = duration;
       }
+      analogWrite(motorPinR, 0);
+      analogWrite(motorPinL, tempo);
 
       delay(1);
     }
@@ -107,12 +98,12 @@ void driveMotor(boolean dir, int duration, int tempo) {
   if (dir == 0) {
     for (int k = 0; k <= duration; k++) {
       endStopper();
-      analogWrite(motorPinL, 0);
-      analogWrite(motorPinR, tempo);
       if (endStop == true) {       
         //setStartPosition();
         k = duration;
       }
+      analogWrite(motorPinL, 0);
+      analogWrite(motorPinR, tempo);
      
       delay(1);
     }
@@ -122,21 +113,28 @@ void driveMotor(boolean dir, int duration, int tempo) {
 void BalloonRiseAndFall() {
   //Serial.println("START TO RISE");
   motorDirection = 1;
-  setDistance();
-  motorSpeed = calculateSpeed(motorTime, motorDistance);
-  Serial.println(motorSpeed);
+  //setDistance();
+  //motorSpeed = calculateSpeed(motorTime, motorDistance);
+  setMotorTime();
+  motorSpeed = 180;
+  //Serial.println(motorSpeed);
   driveMotor(1, motorTime, motorSpeed);
   stopMotor();
   delay(waitingTime * 1000);
   while(pirRead(pirInputPin)){
     delay(waitingTime*1000);
   }
-  Serial.println("START TO FALL");
+  //Serial.println("START TO FALL");
   motorDirection = !motorDirection;
-  driveMotor(0, motorTime*1.2, motorSpeed);
+  //driveMotor(0, motorTime*1.5, motorSpeed);
+  while (endStop == false) {
+    driveMotor(0, 1, motorSpeed);
+  }
   stopMotor();
+  //setStartPosition();
   //Serial.println("BACK TO BOTTOM");
   motorDirection = !motorDirection;
+  //delay(waitingTime * 1000);
 }
 
 boolean pirRead(int PinToRead) {
@@ -147,11 +145,11 @@ boolean pirRead(int PinToRead) {
   }
 }
 
-int calculateSpeed(int duration, int distance) {
-  int calculatedSpeed = distance / duration;
-  Serial.println("Speed: "+calculatedSpeed);
-  return map(calculatedSpeed, minMotorDistance / duration, maxMotorDistance / duration, 150, 254);
-}
+//int calculateSpeed(int duration, int distance) {
+//  int calculatedSpeed = distance / duration;
+//  Serial.println("Speed: "+calculatedSpeed);
+//  return map(calculatedSpeed, minMotorDistance / duration, maxMotorDistance / duration, 150, 254);
+//}
 
 void stopMotor() {
   //driveMotor(0, 0, 0);
@@ -160,21 +158,26 @@ void stopMotor() {
 }
 
 void setStartPosition() {
-  if (endStop) {
+  //if (endStop) {
     //Serial.println("correction");
     
-    for (int e=0;e<=100;e++){     
+    for (int e=0;e<50;e++){     
       analogWrite(motorPinR, 0);
-      analogWrite(motorPinL, 200);
+      analogWrite(motorPinL, 255);
+      delay(1);
     }
+  
       analogWrite(motorPinR, 0);
       analogWrite(motorPinL, 0);
+      delay(1000);
+      //endStop = true;
+      //delay(waitingTime * 1000);
     //delay(500);
     //endStop = false;
     //loop();
     
     //driveMotor(1, 5, 200);
-  }
+  //}
 }
 
 
